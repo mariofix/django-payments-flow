@@ -26,7 +26,7 @@ jobs:
       uses: abatilo/actions-poetry@v2
       with:
         poetry-version: ${{ matrix.poetry-version }}
-    - name: Install django-payments-khipu
+    - name: Install django-payments-flow
       run: poetry install --with dev
     - name: Run Tests
       run: poetry run pytest
@@ -50,8 +50,8 @@ jobs:
       uses: abatilo/actions-poetry@v2
       with:
         poetry-version: ${{ matrix.poetry-version }}
-    - name: Install django-payments-khipu
-      run: poetry install --with docs,dev
+    - name: Install django-payments-flow
+      run: poetry install --with dev
     - name: Deploy Docs
       run: poetry run mkdocs gh-deploy --force
 
@@ -67,7 +67,7 @@ jobs:
     needs: crosscheck
     environment:
       name: pypi
-      url: https://pypi.org/p/django-payments-khipu
+      url: https://pypi.org/p/django-payments-flow
     permissions:
       id-token: write
     steps:
@@ -76,9 +76,9 @@ jobs:
       uses: actions/setup-python@v4
     - name: Set Up Poetry
       uses: abatilo/actions-poetry@v2
-    - name: Install django-payments-khipu
+    - name: Install django-payments-flow
       run: poetry install --with dev
-    - name: Build django-payments-khipu
+    - name: Build django-payments-flow
       run: poetry build
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
