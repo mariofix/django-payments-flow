@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-payments-flow"
-version = "0.1.1"
+version = "0.1.2"
 description = "Soporte Flow para Django Payments"
 authors = ["Mario Hernandez <mariofix@proton.me>"]
 license = "MIT"

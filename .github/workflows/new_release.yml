@@ -1,4 +1,4 @@
-name: Release & Build Docs
+name: New Release
 
 on:
   release:
