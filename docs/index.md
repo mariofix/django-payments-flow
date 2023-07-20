@@ -39,9 +39,10 @@ La configuracion se realiza como una variante de Django Payments
 
 ```python
 PAYMENT_VARIANTS = {
-    "flow": ("django_payments_flow.KhipuProvider", {
-        "key": 1,
-        "secret": "qwertyasdf0123456789",
+    "flow": ("django_payments_flow.FlowProvider", {
+        "endpoint": "https://www.flow.cl/api" # https://sandbox.flow.cl/api para desarrollo
+        "key": "flow_key",
+        "secret": "flow_secret",
     })
 }
 ```

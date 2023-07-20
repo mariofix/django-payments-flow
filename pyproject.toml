@@ -33,6 +33,7 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.8.1"
 django-payments = "2.0.0"
+pyflowcl = "1.1.2"
 
 [tool.poetry.group.dev]
 optional = true
@@ -66,12 +67,13 @@ python_files =[
 ]
 
 [tool.black]
-line-length = 120
+line-length = 119
 target-version = ['py38']
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3
+line_length = 119
+multi_line_output = 5
 py_version = 38
 
 [build-system]

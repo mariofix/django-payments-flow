@@ -1,42 +1,41 @@
-from typing import Any
+from typing import Any, Optional
 
 from django.http import JsonResponse
 from payments import PaymentError, PaymentStatus, RedirectNeeded
-from payments.core import BasicProvider
-from pykhipu.client import Client
-from pykhipu.errors import AuthorizationError, ServiceError, ValidationError
+from payments.core import BasicProvider, get_base_url
+from payments.forms import PaymentForm as BasePaymentForm
+from pyflowcl import Payment as FlowPayment
+from pyflowcl.Clients import ApiClient
 
 
-class KhipuProvider(BasicProvider):
+class FlowProvider(BasicProvider):
     """
-    KhipuProvider es una clase que proporciona integración con Khipu para procesar pagos.
+    FlowProvider es una clase que proporciona integración con Flow para procesar pagos.
+    Inicializa una instancia de FlowProvider con el key y el secreto de Flow.
+
+    Args:
+        key (str): ID de receptor de Khipu.
+        secret (str): Secreto de Khipu.
+        medio (int | None): Versión de la API de notificaciones a utilizar (Valor por defecto: 9).
+        **kwargs: Argumentos adicionales.
     """
 
-    receiver_id: str = None
+    form_class = BasePaymentForm
+    endpoint: str
+    key: str = None
     secret: str = None
-    use_notification: str | None = "1.3"
-    bank_id: str | None = None
+    medio: int = 9
     _client: Any = None
 
-    def __init__(self, receiver_id: str, secret: str, use_notification: str | None, bank_id: str | None, **kwargs):
-        """
-        Inicializa una instancia de KhipuProvider con el ID de receptor y el secreto de Khipu proporcionados.
-
-        Args:
-            receiver_id (str): ID de receptor de Khipu.
-            secret (str): Secreto de Khipu.
-            use_notification (str | None): Versión de la API de notificaciones a utilizar (opcional).
-            bank_id (str | None): Id de Banco para variante (opcional).
-            **kwargs: Argumentos adicionales.
-        """
+    def __init__(self, endpoint: str, key: str, secret: str, medio: int, **kwargs):
         super().__init__(**kwargs)
-        self.receiver_id = receiver_id
+        self.endpoint = endpoint
+        self.key = key
         self.secret = secret
-        self.use_notification = use_notification
-        self.bank_id = bank_id
-        self._client = Client(receiver_id=receiver_id, secret=secret)
+        self.medio = medio
+        self._client = ApiClient(self.endpoint, self.key, self.secret)
 
-    def get_form(self, payment, data: dict | None = None) -> Any:
+    def get_form(self, payment, data: Optional[dict] = None) -> Any:
         """
         Genera el formulario de pago para redirigir a la página de pago de Khipu.
 
@@ -52,39 +51,39 @@ class KhipuProvider(BasicProvider):
 
         """
         if not payment.transaction_id:
-            datos_para_khipu = {
-                "transaction_id": payment.token,
-                "return_url": payment.get_success_url(),
-                "cancel_url": payment.get_failure_url(),
+            datos_para_flow = {
+                "commerceOrder": payment.token,
+                "urlReturn": payment.get_success_url(),
+                "urlConfirmation": f"{get_base_url()}{payment.get_process_url()}",
+                "subject": payment.description,
+                "amount": int(payment.total),
+                "paymentMethod": self.medio,
+                "currency": payment.currency,
             }
-            if self.use_notification:
-                datos_para_khipu.update({"notify_url": self.get_notification_url()})
-                datos_para_khipu.update({"notify_api_version": self.use_notification})
-
-            if self.bank_id:
-                datos_para_khipu.update({"bank_id": self.bank_id})
 
             if payment.billing_email:
-                datos_para_khipu.update({"payer_email": payment.billing_email})
+                datos_para_flow.update({"email": payment.billing_email})
 
-            datos_para_khipu.update(**self._extra_data(payment.attrs))
+            datos_para_flow.update(**self._extra_data(payment.attrs))
+
             try:
-                payment = self._client.payments.post(
-                    payment.description, payment.currency, int(payment.total), **datos_para_khipu
-                )
+                payment.attrs.datos_flow = datos_para_flow
+                payment.save()
+            except Exception as e:
+                raise PaymentError("Ocurrió un error al guardar attrs.datos_flow")
 
-            except (ValidationError, AuthorizationError, ServiceError) as pe:
+            try:
+                pago = FlowPayment.create(self._client, datos_para_flow)
+
+            except Exception as pe:
                 payment.change_status(PaymentStatus.ERROR, str(pe))
                 raise PaymentError(pe)
             else:
-                payment.transaction_id = payment.payment_id
-                payment.attrs.payment_response = payment
+                payment.transaction_id = pago.token
+                payment.attrs.respuesta_flow = {"url": pago.url, "token": pago.token, "flowOrder": pago.flowOrder}
                 payment.save()
 
-        if "payment_url" not in payment:
-            raise PaymentError("Khipu no envió una URL, revisa los logs en Khipu.")
-
-        raise RedirectNeeded(payment.get("payment_url"))
+            raise RedirectNeeded(f"{pago.url}?token={pago.token}")
 
     def process_data(self, payment, request) -> JsonResponse:
         """
@@ -105,30 +104,30 @@ class KhipuProvider(BasicProvider):
             return {}
 
         data = attrs.datos_extra
-        if "payer_email" in data:
-            del data["payer_email"]
+        if "commerceOrder" in data:
+            del data["commerceOrder"]
 
-        if "subject" in data:
-            del data["subject"]
+        if "urlReturn" in data:
+            del data["urlReturn"]
 
-        if "currency" in data:
-            del data["currency"]
+        if "urlConfirmation" in data:
+            del data["urlConfirmation"]
 
         if "amount" in data:
             del data["amount"]
 
-        if "transaction_id" in data:
-            del data["transaction_id"]
+        if "subject" in data:
+            del data["subject"]
 
-        if "notify_url" in data:
-            del data["notify_url"]
+        if "paymentMethod" in data:
+            del data["paymentMethod"]
 
-        if "notify_api_version" in data:
-            del data["notify_api_version"]
+        if "currency" in data:
+            del data["currency"]
 
         return data
 
-    def refund(self, payment, amount: int | None = None) -> int:
+    def refund(self, payment, amount: Optional[int] = None) -> int:
         """
         Realiza un reembolso del pago.
 

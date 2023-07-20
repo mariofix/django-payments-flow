@@ -1,3 +1,3 @@
 # API
 
-::: django_payments_flow.KhipuProvider
+::: django_payments_flow.FlowProvider
