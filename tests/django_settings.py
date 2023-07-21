@@ -13,7 +13,7 @@ INSTALLED_APPS = [
 
 SECRET_KEY = "django-insecure-secret-key"
 
-ROOT_URLCONF = "tests.django_urls"
+ROOT_URLCONF = "tests.django_urlconf"
 
 DATABASES = {"default": dj_database_url.config(default="sqlite:///:memory:")}
 
@@ -22,8 +22,12 @@ USE_TZ = True
 PAYMENT_HOST = "example.com"
 PAYMENT_MODEL = "test_app.BaseTestPayment"
 PAYMENT_VARIANTS = {
-    "khipu": (
-        "django_payments_khipu.KhipuProvider",
-        {"receiver_id": "receiver_id", "secret": "secret"},
+    "flow": (
+        "django_payments_flow.FlowProvider",
+        {
+            "endpoint": "https://sandbox.flow.cl/api",
+            "key": "key",
+            "secret": "secret",
+        }
     )
 }

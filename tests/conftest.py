@@ -5,14 +5,17 @@ fake = Faker()
 
 
 @pytest.fixture
-def mollie_payment():
-    from mollie.api.objects.payment import Payment
+def flow_payment():
+    from pyflowcl.Clients import ApiClient
+    from pyflowcl import Payment
 
-    transaction_id = f"tr_{fake.password(length=10, special_chars=False)}"
+    transaction_id = fake.uuid4()
     currency = fake.currency_code()
-    amount = fake.pydecimal(right_digits=2, min_value=1, max_value=999)
+    amount = fake.pydecimal(right_digits=0, min_value=5000, max_value=6000)
     description = fake.sentence()
-    checkout_url = f"https://khipu.test/checkout/{fake.password(length=10,special_chars=False)}/"
+    checkout_url = (
+        f"https://sandbox.flow.cl/app/web/pay.php?token={fake.password(length=10,special_chars=False)}",
+    )
 
     data = {
         "id": transaction_id,

@@ -33,9 +33,10 @@ plugins:
   - search
 
 nav:
-  - index.md
-  - uso.md
-  - api.md
+  - Inicio: "index.md"
+  - Uso: "uso.md"
+  - API: "api.md"
+  - Cambios: "CHANGELOG.md"
 
 
 markdown_extensions:

@@ -70,7 +70,8 @@ class FlowProvider(BasicProvider):
                 payment.attrs.datos_flow = datos_para_flow
                 payment.save()
             except Exception as e:
-                raise PaymentError("Ocurrió un error al guardar attrs.datos_flow")
+
+                raise PaymentError(f"Ocurrió un error al guardar attrs.datos_flow: {e}")
 
             try:
                 pago = FlowPayment.create(self._client, datos_para_flow)
@@ -148,7 +149,7 @@ class FlowProvider(BasicProvider):
         to_refund = amount or payment.total
         try:
             refund = self._client.payments.post_refunds(payment.transaction_id, to_refund)
-        except (ValidationError, AuthorizationError, ServiceError) as pe:
+        except Exception as pe:
             raise PaymentError(pe)
         else:
             payment.attrs.refund = refund
