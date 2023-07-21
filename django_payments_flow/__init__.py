@@ -1,5 +1,5 @@
-from .provider import FlowProvider
+from .version import __version__
 
-__version__ = "0.1.3"
+# from .provider import FlowProvider
 
-__all__ = ["__version__", "FlowProvider"]
+__all__ = ["__version__"]

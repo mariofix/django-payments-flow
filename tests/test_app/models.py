@@ -1,5 +1,6 @@
 from payments.models import BasePayment
 
+
 class FlowTestPayment(BasePayment):
     """Payment model subclassing the BasePayment model"""
 

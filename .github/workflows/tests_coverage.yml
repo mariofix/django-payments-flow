@@ -16,21 +16,6 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: django_payments_flow
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -43,8 +28,8 @@ jobs:
         poetry-version: ${{ matrix.poetry-version }}
     - name: Install django-payments-flow
       run: poetry install --with dev
-    - name: Test with tox
-      run: poetry run tox run
+    - name: Test
+      run: poetry run tox
     - name: Coverage report (xml)
       run: poetry run coverage xml
     - name: Run codacy-coverage-reporter

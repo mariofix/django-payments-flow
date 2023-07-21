@@ -70,7 +70,6 @@ class FlowProvider(BasicProvider):
                 payment.attrs.datos_flow = datos_para_flow
                 payment.save()
             except Exception as e:
-
                 raise PaymentError(f"Ocurrió un error al guardar attrs.datos_flow: {e}")
 
             try:
