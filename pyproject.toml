@@ -33,7 +33,7 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.8.10"
 django-payments = "2.0.0"
-pyflowcl = "1.1.2"
+pyflowcl = "1.2.0"
 
 [tool.poetry.group.dev]
 optional = true
