@@ -1,7 +1,5 @@
 # django-payments-flow
 
-`Proyecto en desarrollo activo, no listo para produccion`
-
 `django-payments-flow` es una variante de Django Payments que implementa la
 creación, confirmación y expiración de pagos realizados a través de Flow. Este
 módulo proporciona integración con la API de Flow para facilitar el
@@ -40,9 +38,22 @@ La configuracion se realiza como una variante de Django Payments
 ```python
 PAYMENT_VARIANTS = {
     "flow": ("django_payments_flow.FlowProvider", {
-        "endpoint": "https://www.flow.cl/api" # https://sandbox.flow.cl/api para desarrollo
-        "key": "flow_key",
-        "secret": "flow_secret",
+        "api_key": "flow_key",
+        "api_secret": "flow_secret",
+    })
+}
+```
+
+Por defecto las llamadas se realizan al ambiente de produccion de Flow, si
+quieres realizar llamadas al ambiente sandbox debes agregar
+`"endpoint": "sandbox"` a la configuracion
+
+```python
+PAYMENT_VARIANTS = {
+    "flow": ("django_payments_flow.FlowProvider", {
+        "api_key": "flow_key",
+        "api_secret": "flow_secret",
+        "api_endpoint": "sandbox"
     })
 }
 ```

@@ -7,6 +7,13 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+## [0.1.4] - 2023-07-20
+
+### Agregado
+
+- Seleccion ambiente
+- Soporte pyflowcl.FlowAPI
+
 ## [0.1.3] - 2023-07-20
 
 ### Agregado

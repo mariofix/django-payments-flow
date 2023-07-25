@@ -4,8 +4,8 @@ from django.http import JsonResponse
 from payments import PaymentError, PaymentStatus, RedirectNeeded
 from payments.core import BasicProvider, get_base_url
 from payments.forms import PaymentForm as BasePaymentForm
-from pyflowcl import Payment as FlowPayment
-from pyflowcl.Clients import ApiClient
+from pyflowcl import FlowAPI
+from pyflowcl.utils import genera_parametros
 
 
 class FlowProvider(BasicProvider):
@@ -14,33 +14,36 @@ class FlowProvider(BasicProvider):
     Inicializa una instancia de FlowProvider con el key y el secreto de Flow.
 
     Args:
-        key (str): ID de receptor de Khipu.
-        secret (str): Secreto de Khipu.
-        medio (int | None): Versión de la API de notificaciones a utilizar (Valor por defecto: 9).
+        api_key (str): ID de receptor de Khipu.
+        api_secret (str): Secreto de Khipu.
+        api_medio (int | None): Versión de la API de notificaciones a utilizar (Valor por defecto: 9).
+        api_endpoint (str): Ambiente flow, puede ser "live" o "sandbox" (Valor por defecto: live).
         **kwargs: Argumentos adicionales.
     """
 
     form_class = BasePaymentForm
-    endpoint: str
-    key: str = None
-    secret: str = None
-    medio: int = 9
+    api_endpoint: str
+    api_key: str = None
+    api_secret: str = None
+    api_medio: int = 9
     _client: Any = None
 
-    def __init__(self, endpoint: str, key: str, secret: str, medio: int, **kwargs):
+    def __init__(self, api_endpoint: str, api_key: str, api_secret: str, api_medio: int, **kwargs: int):
         super().__init__(**kwargs)
-        self.endpoint = endpoint
-        self.key = key
-        self.secret = secret
-        self.medio = medio
-        self._client = ApiClient(self.endpoint, self.key, self.secret)
+        self.api_endpoint = api_endpoint
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.api_medio = api_medio
+        self._client = FlowAPI(
+            api_key=self.api_key, api_secret=self.api_secret, endpoint=self.api_endpoint, medio=self.api_medio
+        )
 
     def get_form(self, payment, data: Optional[dict] = None) -> Any:
         """
         Genera el formulario de pago para redirigir a la página de pago de Khipu.
 
         Args:
-            payment: Objeto de pago.
+            payment ("Payment"): Objeto de pago Django Payments.
             data (dict | None): Datos del formulario (opcional).
 
         Returns:
@@ -52,12 +55,13 @@ class FlowProvider(BasicProvider):
         """
         if not payment.transaction_id:
             datos_para_flow = {
+                "apiKey": self.api_key,
                 "commerceOrder": payment.token,
                 "urlReturn": payment.get_success_url(),
                 "urlConfirmation": f"{get_base_url()}{payment.get_process_url()}",
                 "subject": payment.description,
                 "amount": int(payment.total),
-                "paymentMethod": self.medio,
+                "paymentMethod": self.api_medio,
                 "currency": payment.currency,
             }
 
@@ -66,6 +70,7 @@ class FlowProvider(BasicProvider):
 
             datos_para_flow.update(**self._extra_data(payment.attrs))
 
+            datos_para_flow = genera_parametros(datos_para_flow, self.api_secret)
             try:
                 payment.attrs.datos_flow = datos_para_flow
                 payment.save()
@@ -73,7 +78,7 @@ class FlowProvider(BasicProvider):
                 raise PaymentError(f"Ocurrió un error al guardar attrs.datos_flow: {e}")
 
             try:
-                pago = FlowPayment.create(self._client, datos_para_flow)
+                pago = self._client.objetos.call_payment_create(parameters=datos_para_flow)
 
             except Exception as pe:
                 payment.change_status(PaymentStatus.ERROR, str(pe))
@@ -90,8 +95,8 @@ class FlowProvider(BasicProvider):
         Procesa los datos del pago recibidos desde Khipu.
 
         Args:
-            payment: Objeto de pago.
-            request: Objeto de solicitud HTTP de Django.
+            payment ("Payment"): Objeto de pago Django Payments.
+            request ("HttpRequest"): Objeto de solicitud HTTP de Django.
 
         Returns:
             JsonResponse: Respuesta JSON que indica el procesamiento de los datos del pago.
@@ -132,7 +137,7 @@ class FlowProvider(BasicProvider):
         Realiza un reembolso del pago.
 
         Args:
-            payment: Objeto de pago.
+            payment ("Payment"): Objeto de pago Django Payments.
             amount (int | None): Monto a reembolsar (opcional).
 
         Returns:
@@ -156,26 +161,23 @@ class FlowProvider(BasicProvider):
             payment.change_status(PaymentStatus.REFUNDED)
             return to_refund
 
-    def capture(self, payment, amount=None):
+    def capture(self):
         """
-        Captura el monto del pago.
+        Captura el pago (no implementado).
 
-        Args:
-            payment: Objeto de pago.
-            amount: Monto a capturar (no utilizado).
-
+        Note:
+            Método no soportado por Flow.
         Raises:
             NotImplementedError: Método no implementado.
-
         """
         raise NotImplementedError()
 
-    def release(self, payment):
+    def release(self):
         """
         Libera el pago (no implementado).
 
-        Args:
-            payment: Objeto de pago.
+        Note:
+            Método no soportado por Flow.
 
         Raises:
             NotImplementedError: Método no implementado.

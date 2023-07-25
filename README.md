@@ -1,7 +1,5 @@
 # django-payments-flow
 
-`Proyecto en desarrollo activo, no listo para produccion`
-
 `django-payments-flow` es una variante de Django Payments que implementa la
 creación, confirmación y expiración de pagos realizados a través de Flow. Este
 módulo proporciona integración con la API de Flow para facilitar el

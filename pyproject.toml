@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-payments-flow"
-version = "0.1.3"
+version = "0.1.4"
 description = "Soporte Flow para Django Payments"
 authors = ["Mario Hernandez <mariofix@proton.me>"]
 license = "MIT"
@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "django_payments_flow"}]
 repository = "https://github.com/mariofix/django-payments-flow"
 documentation = "https://mariofix.github.io/django-payments-flow/"
-homepage = "https://www.flow.cl/docs/api.html"
+homepage = "https://mariofix.github.io/django-payments-flow/"
 keywords = [
     "flow",
     "pagos",
@@ -17,7 +17,7 @@ keywords = [
     "django-payments"
 ]
 classifiers=[
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -32,8 +32,8 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.8.10"
-django-payments = "2.0.0"
-pyflowcl = "1.1.2"
+django-payments = "^2.0"
+pyflowcl = "^1.2"
 
 [tool.poetry.group.dev]
 optional = true

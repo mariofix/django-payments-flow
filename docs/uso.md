@@ -22,21 +22,36 @@ configuración de Django:
 ```python
 PAYMENT_VARIANTS = {
     "flow": ("django_payments_flow.FlowProvider", {
-        "endpoint": "https://www.flow.cl/api" # https://sandbox.flow.cl/api para desarrollo
-        "key": "flow_key",
-        "secret": "flow_secret",
+        "api_key": "flow_key",
+        "api_secret": "flow_secret",
     })
 }
 ```
 
+Por defecto las llamadas se realizan al ambiente de produccion de Flow, si
+quieres realizar llamadas al ambiente sandbox debes agregar
+`"endpoint": "sandbox"` a la configuracion
+
+```python
+PAYMENT_VARIANTS = {
+    "flow": ("django_payments_flow.FlowProvider", {
+        "api_key": "flow_key",
+        "api_secret": "flow_secret",
+        "api_endpoint": "sandbox"
+    })
+}
+```
+
+
 ### Variables de configuración
 
-* `endpoint`: URL de destino en Flow, una de: https://www.flow.cl/api o https://sandbox.flow.cl/api
-* `key`: Este valor corresponde a la cuenta entregada por Flow para
+* `api_endpoint`: Valor de ambiente de Flow, puede ser "live o "sandbox" (Valor por
+ defecto: live)
+* `api_key`: Este valor corresponde a la cuenta entregada por Flow para
 identificar al receptor de los pagos.
-* `secret`: Este valor corresponde a la contraseña entregada por Khipu para
+* `api_secret`: Este valor corresponde a la contraseña entregada por Khipu para
 autenticar la comunicación con su plataforma.
-* `medio`: Este valor indica si quieres utilizar algun medio de pago especifico
+* `api_medio`: Este valor indica si quieres utilizar algun medio de pago especifico
 segun lo indicado en
 [FlowAPI](https://www.flow.cl/docs/api.html#section/Introduccion/Realizar-pruebas-en-nuestro-ambiente-Sandbox)
 (Valor por defecto: 9)

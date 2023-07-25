@@ -1,3 +1,3 @@
 # API
 
-::: django_payments_flow.FlowProvider
+::: django_payments_flow.provider.FlowProvider
