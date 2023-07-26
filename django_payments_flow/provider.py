@@ -1,11 +1,13 @@
+from dataclasses import asdict
 from typing import Any, Optional
 
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 from payments import PaymentError, PaymentStatus, RedirectNeeded
 from payments.core import BasicProvider, get_base_url
 from payments.forms import PaymentForm as BasePaymentForm
-from pyflowcl import FlowAPI
-from pyflowcl.utils import genera_parametros
+from pyflowcl import Payment as FlowPayment
+from pyflowcl import Refund as FlowRefund
+from pyflowcl.Clients import ApiClient
 
 
 class FlowProvider(BasicProvider):
@@ -25,18 +27,27 @@ class FlowProvider(BasicProvider):
     api_endpoint: str
     api_key: str = None
     api_secret: str = None
-    api_medio: int = 9
+    api_medio: int
     _client: Any = None
 
-    def __init__(self, api_endpoint: str, api_key: str, api_secret: str, api_medio: int, **kwargs: int):
+    def __init__(
+        self,
+        api_endpoint: str,
+        api_key: str,
+        api_secret: str,
+        api_medio: int = 9,
+        **kwargs: int,
+    ):
         super().__init__(**kwargs)
         self.api_endpoint = api_endpoint
         self.api_key = api_key
         self.api_secret = api_secret
         self.api_medio = api_medio
-        self._client = FlowAPI(
-            api_key=self.api_key, api_secret=self.api_secret, endpoint=self.api_endpoint, medio=self.api_medio
-        )
+        if self.api_endpoint == "live":
+            self.api_endpoint = "https://www.flow.cl/api"
+        elif self.api_endpoint == "sandbox":
+            self.api_endpoint = "https://sandbox.flow.cl/api"
+        self._client = ApiClient(self.api_endpoint, self.api_key, self.api_secret)
 
     def get_form(self, payment, data: Optional[dict] = None) -> Any:
         """
@@ -70,23 +81,27 @@ class FlowProvider(BasicProvider):
 
             datos_para_flow.update(**self._extra_data(payment.attrs))
 
-            datos_para_flow = genera_parametros(datos_para_flow, self.api_secret)
             try:
-                payment.attrs.datos_flow = datos_para_flow
+                payment.attrs.datos_payment_create_flow = datos_para_flow
                 payment.save()
             except Exception as e:
                 raise PaymentError(f"Ocurrió un error al guardar attrs.datos_flow: {e}")
 
             try:
-                pago = self._client.objetos.call_payment_create(parameters=datos_para_flow)
+                pago = FlowPayment.create(self._client, datos_para_flow)
 
             except Exception as pe:
                 payment.change_status(PaymentStatus.ERROR, str(pe))
                 raise PaymentError(pe)
             else:
                 payment.transaction_id = pago.token
-                payment.attrs.respuesta_flow = {"url": pago.url, "token": pago.token, "flowOrder": pago.flowOrder}
+                payment.attrs.respuesta_flow = {
+                    "url": pago.url,
+                    "token": pago.token,
+                    "flowOrder": pago.flowOrder,
+                }
                 payment.save()
+                payment.change_status(PaymentStatus.WAITING)
 
             raise RedirectNeeded(f"{pago.url}?token={pago.token}")
 
@@ -102,49 +117,80 @@ class FlowProvider(BasicProvider):
             JsonResponse: Respuesta JSON que indica el procesamiento de los datos del pago.
 
         """
-        return JsonResponse("process_data")
+        if "token" not in request.POST:
+            raise HttpResponseBadRequest("token no está en post")
+
+        data = {"status": "ok"}
+        if payment.status in [PaymentStatus.WAITING, PaymentStatus.PREAUTH]:
+            self.actualiza_estado(payment=payment)
+
+        return JsonResponse(data)
+
+    def actualiza_estado(self, payment) -> dict:
+        """Actualiza el estado del pago con Flow
+
+        Args:
+            payment ("Payment): Objeto de pago Django Payments.
+
+        Returns:
+            dict: Diccionario con valores del objeto `PaymentStatus`.
+        """
+        try:
+            status = FlowPayment.getStatus(self._client, payment.transaction_id)
+        except Exception as e:
+            raise e
+        else:
+            if status.status == 2:
+                payment.change_status(PaymentStatus.CONFIRMED)
+            elif status.status == 3:
+                payment.change_status(PaymentStatus.REJECTED)
+            elif status.status == 4:
+                payment.change_status(PaymentStatus.ERROR)
+        return asdict(status)
 
     def _extra_data(self, attrs) -> dict:
-        if "datos_extra" not in attrs:
+        """Busca los datos que son enviandos por django-payments y los saca del diccionario
+
+        Args:
+            attrs ("PaymentAttributeProxy"): Obtenido desde PaymentModel.extra_data
+
+        Returns:
+            dict: Diccionario con valores permitidos.
+        """
+        try:
+            data = attrs.datos_extra
+        except AttributeError:
             return {}
 
-        data = attrs.datos_extra
-        if "commerceOrder" in data:
-            del data["commerceOrder"]
-
-        if "urlReturn" in data:
-            del data["urlReturn"]
-
-        if "urlConfirmation" in data:
-            del data["urlConfirmation"]
-
-        if "amount" in data:
-            del data["amount"]
-
-        if "subject" in data:
-            del data["subject"]
-
-        if "paymentMethod" in data:
-            del data["paymentMethod"]
-
-        if "currency" in data:
-            del data["currency"]
+        prohibidos = [
+            "commerceOrder",
+            "urlReturn",
+            "urlConfirmation",
+            "amount",
+            "subject",
+            "paymentMethod",
+            "currency",
+        ]
+        for valor in prohibidos:
+            if valor in data:
+                del data[valor]
 
         return data
 
     def refund(self, payment, amount: Optional[int] = None) -> int:
         """
         Realiza un reembolso del pago.
+        El seguimiendo se debe hacer directamente en Flow
 
         Args:
             payment ("Payment"): Objeto de pago Django Payments.
             amount (int | None): Monto a reembolsar (opcional).
 
         Returns:
-            int: Monto reembolsado.
+            int: Monto de reembolso solicitado.
 
         Raises:
-            PaymentError: Error al realizar el reembolso.
+            PaymentError: Error al crear el reembolso.
 
         """
         if payment.status != PaymentStatus.CONFIRMED:
@@ -152,11 +198,20 @@ class FlowProvider(BasicProvider):
 
         to_refund = amount or payment.total
         try:
-            refund = self._client.payments.post_refunds(payment.transaction_id, to_refund)
+            datos_reembolso = {
+                "apiKey": self.api_key,
+                "refundCommerceOrder": payment.token,
+                "receiverEmail": payment.billing_email,
+                "amount": to_refund,
+                "urlCallBack": f"{get_base_url()}{payment.get_process_url()}",
+                "commerceTrxId": payment.token,
+                "flowTrxId": payment.attrs.respuesta_flow["flowOrder"],
+            }
+            refund = FlowRefund.create(self._client, datos_reembolso)
         except Exception as pe:
             raise PaymentError(pe)
         else:
-            payment.attrs.refund = refund
+            payment.attrs.solicitud_reembolso = refund
             payment.save()
             payment.change_status(PaymentStatus.REFUNDED)
             return to_refund

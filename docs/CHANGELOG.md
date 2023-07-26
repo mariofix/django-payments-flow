@@ -11,8 +11,11 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 
 ### Agregado
 
-- Seleccion ambiente
-- Soporte pyflowcl.FlowAPI
+- Creacion de reembolso
+
+### Cambiado
+
+- Rollback de soporte openapi3
 
 ## [0.1.3] - 2023-07-20
 
