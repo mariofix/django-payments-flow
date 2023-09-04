@@ -47,7 +47,7 @@ pytest = "^7.4.0"
 faker = ">=18.13,<20.0"
 mkdocs = "^1.4.3"
 mkdocs-material = "^9.1.18"
-mkdocstrings = {extras = ["python"], version = "^0.22.0"}
+mkdocstrings = {extras = ["python"], version = ">=0.22,<0.24"}
 mkdocs-git-revision-date-localized-plugin = "^1.2.0"
 mkdocs-git-committers-plugin-2 = "^1.1.2"
 pillow = "^10.0.0"
