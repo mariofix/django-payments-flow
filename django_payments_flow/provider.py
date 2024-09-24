@@ -16,8 +16,8 @@ class FlowProvider(BasicProvider):
     Inicializa una instancia de FlowProvider con el key y el secreto de Flow.
 
     Args:
-        api_key (str): ID de receptor de Khipu.
-        api_secret (str): Secreto de Khipu.
+        api_key (str): ApiKey entregada por Flow.
+        api_secret (str): ApiSecret entregada por Flow.
         api_medio (int | None): Versión de la API de notificaciones a utilizar (Valor por defecto: 9).
         api_endpoint (str): Ambiente flow, puede ser "live" o "sandbox" (Valor por defecto: live).
         **kwargs: Argumentos adicionales.
@@ -51,17 +51,17 @@ class FlowProvider(BasicProvider):
 
     def get_form(self, payment, data: Optional[dict] = None) -> Any:
         """
-        Genera el formulario de pago para redirigir a la página de pago de Khipu.
+        Genera el formulario de pago para redirigir a la página de pago de Flow.
 
         Args:
             payment ("Payment"): Objeto de pago Django Payments.
             data (dict | None): Datos del formulario (opcional).
 
         Returns:
-            Any: Formulario de pago redirigido a la página de pago de Khipu.
+            Any: Formulario de pago redirigido a la página de pago de Flow.
 
         Raises:
-            RedirectNeeded: Redirige a la página de pago de Khipu.
+            RedirectNeeded: Redirige a la página de pago de Flow.
 
         """
         if not payment.transaction_id:
@@ -107,7 +107,7 @@ class FlowProvider(BasicProvider):
 
     def process_data(self, payment, request) -> JsonResponse:
         """
-        Procesa los datos del pago recibidos desde Khipu.
+        Procesa los datos del pago recibidos desde Flow.
 
         Args:
             payment ("Payment"): Objeto de pago Django Payments.

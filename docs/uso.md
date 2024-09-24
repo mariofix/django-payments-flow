@@ -42,7 +42,6 @@ PAYMENT_VARIANTS = {
 }
 ```
 
-
 ### Variables de configuración
 
 * `api_endpoint`: Valor de ambiente de Flow, puede ser "live o "sandbox" (Valor por
@@ -64,6 +63,7 @@ modelo de Pagos.
 
 Por ejemplo, si deseas enviar un limite de 5 minutos para cada compra, puedes
 utilizar el siguiente código:
+
 ```python
 datos_extra: dict = {
     "timeout": 300,

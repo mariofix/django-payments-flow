@@ -5,6 +5,8 @@ creación, confirmación y expiración de pagos realizados a través de Flow. Es
 módulo proporciona integración con la API de Flow para facilitar el
 procesamiento y gestión de pagos en tu aplicación web Django.
 
+![PyPI - Status](https://img.shields.io/pypi/status/django-payments-flow)
+[![Downloads](https://pepy.tech/badge/django-payments-flow)](https://pepy.tech/project/django-payments-flow)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7dc3c8d6fe844fdaa1de0cb86c242934)](https://app.codacy.com/gh/mariofix/django-payments-flow/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/7dc3c8d6fe844fdaa1de0cb86c242934)](https://app.codacy.com/gh/mariofix/django-payments-flow/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/mariofix/django-payments-flow/main.svg)](https://results.pre-commit.ci/latest/github/mariofix/django-payments-flow/main)
@@ -12,9 +14,6 @@ procesamiento y gestión de pagos en tu aplicación web Django.
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/django-payments-flow)
 ![PyPI - Implementation](https://img.shields.io/pypi/implementation/django-payments-flow)
 ![PyPI - License](https://img.shields.io/pypi/l/django-payments-flow)
-![PyPI - Status](https://img.shields.io/pypi/status/django-payments-flow)
-
-
 
 ## Introducción
 

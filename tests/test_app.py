@@ -17,7 +17,7 @@ from django_payments_flow.version import __version__
 
 
 def test_version():
-    assert __version__ == "0.1.4"
+    assert __version__ == "2024.9.23"
 
 
 # def test_get_provider_from_settings(mocker):

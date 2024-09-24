@@ -14,8 +14,8 @@ updates:
     assignees:
       - "mariofix"
     commit-message:
-      prefix: "poetry prod"
-      prefix-development: "poetry dev"
+      prefix: "package update"
+      prefix-development: "package update in dev"
       include: "scope"
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -24,6 +24,6 @@ updates:
     allow:
       - dependency-type: "all"
     commit-message:
-      prefix: "actions prod"
-      prefix-development: "actions dev"
+      prefix: "commit"
+      prefix-development: "commit dev"
       include: "scope"
