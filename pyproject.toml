@@ -27,7 +27,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.9"
 django-payments = ">=2.0.0, <=3.1"
-pyflowcl = "^1.2"
+pyflowcl = ">=1.2,<2025.0"
 
 [tool.poetry.group.dev]
 optional = true
